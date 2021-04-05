@@ -577,8 +577,7 @@ contract BEP20 is Context, IBEP20, Ownable {
     mapping(address => mapping(address => uint256)) private _allowances;
 
     uint256 private _totalSupply;
-    /// maxSupply set to one billion
-    uint256 public maxSupply = 1000000000;
+
     string private _name;
     string private _symbol;
     uint8 private _decimals;
@@ -747,7 +746,6 @@ contract BEP20 is Context, IBEP20, Ownable {
      * - `msg.sender` must be the token owner
      */
     function mint(uint256 amount) public onlyOwner returns (bool) {
-        require(_totalSupply.add(amount) <= maxSupply,'Force: exceed max supply!');
         _mint(_msgSender(), amount);
         return true;
     }

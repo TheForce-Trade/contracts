@@ -872,7 +872,7 @@ pragma solidity ^0.6.12;
 contract ForceTreasury is Ownable {
     using SafeERC20 for IERC20;
     
-    function checkBalance(address _token) external view onlyOwner returns (uint256) {
+    function checkBalance(address _token) external view returns (uint256) {
         return IERC20(_token).balanceOf(address(this));
     }
     

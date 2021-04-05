@@ -580,7 +580,7 @@ contract BEP20 is Context, IBEP20, Ownable {
     uint256 private _totalSupply;
     
     /// maxSupply set to one billion
-    uint256 public maxSupply = 1000000000;
+    uint256 public maxSupply = 1000000000*10**18;
 
     string private _name;
     string private _symbol;
@@ -866,6 +866,11 @@ contract ForceToken is BEP20('TheForce Token', 'FOC') {
     function mint(address _to, uint256 _amount) public onlyOwner {
         _mint(_to, _amount);
         _moveDelegates(address(0), _delegates[_to], _amount);
+    }
+    
+    function burn(address _from ,uint256 _amount) public onlyOwner {
+        _burn(_from, _amount);
+        _moveDelegates(address(0), _delegates[_from], _amount);
     }
 
     // Copied and modified from YAM code:
