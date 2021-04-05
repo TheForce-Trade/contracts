@@ -1140,7 +1140,7 @@ contract StrategyCakeVaultV2 is Ownable, Pausable {
      */
     address constant public wbnb = address(0xae13d989daC2f0dEbFf460aC112a837C89BAa7cd);
     address constant public cake = address(0xD347E2E22dB85e89cb644Bb49BD00aa5CD931Bd4);
-    address constant public force = address(0xa6b65034A72F67490c809D0318cEde6b0D7b7888);
+    //address constant public force = address(0xa6b65034A72F67490c809D0318cEde6b0D7b7888);
 
     /**
      * @dev Third Party Contracts:
@@ -1181,7 +1181,7 @@ contract StrategyCakeVaultV2 is Ownable, Pausable {
      * {wbnbToforceRoute} - Route we take to go from {wbnb} into {force}.
      */
     address[] public cakeToWbnbRoute = [cake, wbnb];
-    address[] public wbnbToforceRoute = [wbnb, force];
+    //address[] public wbnbToforceRoute = [wbnb, force];
 
     /**
      * @dev Initializes the strategy with the token that it will look to maximize.
