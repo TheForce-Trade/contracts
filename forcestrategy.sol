@@ -952,7 +952,7 @@ contract Pausable is Context {
     }
 }
 
-// File: contracts/BIFI/interfaces/common/IUniswapRouter.sol
+
 
 
 pragma solidity ^0.6.0;
@@ -1132,7 +1132,7 @@ contract ForceStrategyV1 is Ownable, Pausable {
      * {force} - Token that the strategy maximizes. The same token that users deposit in the vault.
      */
     address constant public wbnb = address(0xae13d989daC2f0dEbFf460aC112a837C89BAa7cd);
-    address constant public force = address(0xD347E2E22dB85e89cb644Bb49BD00aa5CD931Bd4);
+    address constant public force = address(0xac04154Af29Fe013DBb2ae1aE83c97E1ff64071A);
  
 
     /**
@@ -1141,14 +1141,14 @@ contract ForceStrategyV1 is Ownable, Pausable {
      * {jedimaster} - Master staking contract. Stake force, get rewards.
      */
     address constant public unirouter  = address(0xD99D1c33F9fC3444f8101754aBC46c52416550D1);
-    address constant public jedimaster = address(0x7C7DffEF2cc69773F4D3E6780a2f39080cb0ce8b);
+    address constant public jedimaster = address(0x64494e492C93Fced7A8993dbFbC35A1c7543C9f6);
 
     /**
      * @dev 
      * {treasury} - Address of the force community treasury
      * {vault} - Address of the vault, to be set in constructor.
      */
-    address constant public treasury = address(0xB3947c3F53d9C9aB3a9eae0FA49cF853C0a6aA97);
+    address constant public treasury = address(0xB3A7Ab9D9FFD1Eb288Bc46efd448A633C95Ca550);
     address public vault;
 
     /**
