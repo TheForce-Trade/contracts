@@ -2,7 +2,7 @@
 // File: @openzeppelin/contracts/GSN/Context.sol
 
 
-pragma solidity ^0.6.0;
+pragma solidity ^0.6.12;
 
 /*
  * @dev Provides information about the current execution context, including the
@@ -1091,22 +1091,19 @@ interface IUniswapRouter {
 
 
 
-pragma solidity ^0.6.0;
 
-interface IMasterChef {
+
+interface IJediMaster {
     function deposit(uint256 _pid, uint256 _amount) external;
     function withdraw(uint256 _pid, uint256 _amount) external;
     function enterStaking(uint256 _amount) external;
     function leaveStaking(uint256 _amount) external;
-    function pendingCake(uint256 _pid, address _user) external view returns (uint256);
+    function pendingForce(uint256 _pid, address _user) external view returns (uint256);
     function userInfo(uint256 _pid, address _user) external view returns (uint256, uint256);
     function emergencyWithdraw(uint256 _pid) external;
 }
 
 
-
-
-pragma solidity ^0.6.12;
 
 
 
@@ -1117,14 +1114,14 @@ pragma solidity ^0.6.12;
 
 
 /**
- * @title Strategy Cake V1
+ * @title Strategy Force V1
  * @author theforce_team
- * @dev Implementation of a strategy to get yields from farming a Cake pool. 
+ * @dev Implementation of a strategy to get yields from farming a force pool. 
  *
- * The strategy simply deposits whatever funds it receives from the vault into the MasterChef.
- * Rewards from the MasterChef can be regularly compounded.
+ * The strategy simply deposits whatever funds it receives from the vault into the jedimaster.
+ * Rewards from the jedimaster can be regularly compounded.
  */
-contract StrategyCakeV1 is Ownable, Pausable {
+contract ForceStrategyV1 is Ownable, Pausable {
     using SafeERC20 for IERC20;
     using Address for address;
     using SafeMath for uint256;
@@ -1134,27 +1131,26 @@ contract StrategyCakeV1 is Ownable, Pausable {
     /**
      * @dev Tokens Used:
      * {wbnb} - Required for liquidity routing when doing swaps.
-     * {cake} - Token that the strategy maximizes. The same token that users deposit in the vault.
-     * {force} - BeefyFinance token, used to send funds to the treasury.
+     * {force} - Token that the strategy maximizes. The same token that users deposit in the vault.
      */
     address constant public wbnb = address(0xae13d989daC2f0dEbFf460aC112a837C89BAa7cd);
-    address constant public cake = address(0xc4Bea3B6ab8518F02527702294925228223475B7);
-    //address constant public force = address(0xa6b65034A72F67490c809D0318cEde6b0D7b7888);
+    address constant public force = address(0xac04154Af29Fe013DBb2ae1aE83c97E1ff64071A);
+ 
 
     /**
-     * @dev Third Party Contracts:
+     * @dev router and staking Contracts:
      * {unirouter} - PancakeSwap unirouter
-     * {masterchef} - MasterChef contract. Stake Cake, get rewards.
+     * {jedimaster} - Master staking contract. Stake force, get rewards.
      */
     address constant public unirouter  = address(0xD99D1c33F9fC3444f8101754aBC46c52416550D1);
-    address constant public masterchef = address(0xf088d241e9bFD6427C82D07985B3e3e244DDCD2A);
+    address constant public jedimaster = address(0x64494e492C93Fced7A8993dbFbC35A1c7543C9f6);
 
     /**
      * @dev 
      * {treasury} - Address of the force community treasury
      * {vault} - Address of the vault, to be set in constructor.
      */
-    address constant public treasury = address(0x23D3C41ef4354D29dD74D40B86c15d6DB57381f8);
+    address constant public treasury = address(0xB3A7Ab9D9FFD1Eb288Bc46efd448A633C95Ca550);
     address public vault;
 
     /**
@@ -1176,11 +1172,9 @@ contract StrategyCakeV1 is Ownable, Pausable {
 
     /**
      * @dev Routes we take to swap tokens using PancakeSwap.
-     * {cakeToWbnbRoute} - Route we take to go from {cake} into {wbnb}.
-     * {wbnbToforceRoute} - Route we take to go from {wbnb} into {force}.
+     * {forceToWbnbRoute} - Route we take to go from {force} into {wbnb}.
      */
-    address[] public cakeToWbnbRoute = [cake, wbnb];
-    //address[] public wbnbToforceRoute = [wbnb, force];
+    address[] public forceToWbnbRoute = [force, wbnb];
 
     /**
      * @dev Initializes the strategy with the token that it will look to maximize.
@@ -1189,9 +1183,9 @@ contract StrategyCakeV1 is Ownable, Pausable {
     constructor(address _vault) public {
         vault = _vault;
         admins[msg.sender] = true;
-        IERC20(cake).safeApprove(unirouter, uint(-1));
+        IERC20(force).safeApprove(unirouter, uint(-1));
         IERC20(wbnb).safeApprove(unirouter, uint(-1));
-        IERC20(cake).safeApprove(masterchef, uint(-1));
+        IERC20(force).safeApprove(jedimaster, uint(-1));
     }
 
     function addAdmin(address _admin) external onlyOwner {
@@ -1205,58 +1199,57 @@ contract StrategyCakeV1 is Ownable, Pausable {
     /**
      * @dev Function that puts the funds to work.
      * It gets called whenever someone deposits in the strategy's vault contract.
-     * It deposits cake in the MasterChef to earn rewards in cake.
+     * It deposits force in the jedimaster to earn rewards in force.
      */
     function deposit() public whenNotPaused {
-        uint256 cakeBal = IERC20(cake).balanceOf(address(this));
+        uint256 forceBal = IERC20(force).balanceOf(address(this));
 
-        if (cakeBal > 0) {
-            IMasterChef(masterchef).enterStaking(cakeBal);
+        if (forceBal > 0) {
+            IJediMaster(jedimaster).enterStaking(forceBal);
         }
     }
 
     /**
-     * @dev It withdraws {cake} from the MasterChef and sends it to the vault. The contract owner
-     * doesn't pay withdrawal fees. It makes it so that this strat can also be used as a worker 
-     * under a YieldBalancer.
-     * @param _amount How much {cake} to withdraw.
+     * @dev It withdraws {force} from the jedimaster and sends it to the vault. The contract owner
+     * doesn't pay withdrawal fees. 
+     * 
+     * @param _amount How much {force} to withdraw.
      */
     function withdraw(uint256 _amount) external {
         require(msg.sender == vault, "!vault");
 
-        uint256 cakeBal = IERC20(cake).balanceOf(address(this));
+        uint256 forceBal = IERC20(force).balanceOf(address(this));
 
-        if (cakeBal <= _amount) {
-            IMasterChef(masterchef).leaveStaking(_amount.sub(cakeBal));
-            cakeBal = IERC20(cake).balanceOf(address(this));
+        if (forceBal <= _amount) {
+            IJediMaster(jedimaster).leaveStaking(_amount.sub(forceBal));
+            forceBal = IERC20(force).balanceOf(address(this));
         }
 
-        if (cakeBal > _amount) {
-            cakeBal = _amount;    
+        if (forceBal > _amount) {
+            forceBal = _amount;    
         }
         
         if (tx.origin == owner()) {
-            IERC20(cake).safeTransfer(vault, cakeBal); 
+            IERC20(force).safeTransfer(vault, forceBal); 
         } else {
-            uint256 withdrawalFee = cakeBal.mul(WITHDRAWAL_FEE).div(MAX_FEE);
-            IERC20(cake).safeTransfer(vault, cakeBal.sub(withdrawalFee)); 
+            uint256 withdrawalFee = forceBal.mul(WITHDRAWAL_FEE).div(MAX_FEE);
+            IERC20(force).safeTransfer(vault, forceBal.sub(withdrawalFee)); 
         }
     }
 
     /**
      * @dev Core function of the strat, in charge of collecting and re-investing rewards.
-     * 1. It claims rewards from the MasterChef
-     * 3. It charges the system fee and sends it to force stakers.
+     * 1. It claims rewards from the jedimaster
+     * 3. It charges the system fee and sends it to community Treasury.
      * 4. It re-invests the remaining profits.
      */
     function harvest() external whenNotPaused {
         require(!Address.isContract(msg.sender), "!contract");
         require(admins[msg.sender] == true,"Not called by admin!");
-        IMasterChef(masterchef).leaveStaking(0);
+        IJediMaster(jedimaster).leaveStaking(0);
         chargeFees();
         deposit();
     }
-    
 
     /**
      * @dev Takes out 4% as system fees from the rewards. 
@@ -1264,42 +1257,39 @@ contract StrategyCakeV1 is Ownable, Pausable {
      * 4.0%  -> Treasury fee
      */
     function chargeFees() internal {
-        uint256 cakeBal = IERC20(cake).balanceOf(address(this));
-        uint256 toWbnb = cakeBal.mul(45).div(MAX_FEE);
+        uint256 forceBal = IERC20(force).balanceOf(address(this));
         
-        IUniswapRouter(unirouter).swapExactTokensForTokens(toWbnb, 0, cakeToWbnbRoute, address(this), now.add(600));
-        
+        uint256 toWbnb = forceBal.mul(CALL_FEE).div(MAX_FEE);
+        uint256 toForce = forceBal.mul(TREASURY_FEE).div(MAX_FEE);
 
+        IUniswapRouter(unirouter).swapExactTokensForTokens(toWbnb, 0, forceToWbnbRoute, address(this), now.add(600));
         uint256 wbnbBal = IERC20(wbnb).balanceOf(address(this));
-
-        uint256 callFee = wbnbBal.mul(CALL_FEE).div(45);
-        uint256 treasuryFee = wbnbBal.mul(TREASURY_FEE).div(45);
-
-        IERC20(wbnb).safeTransfer(msg.sender, callFee);
-        IERC20(wbnb).safeTransfer(treasury, treasuryFee); 
+        IERC20(wbnb).safeTransfer(msg.sender, wbnbBal);
         
+        IERC20(force).safeTransfer(treasury, toForce);
+    
     }
 
     /**
-     * @dev Function to calculate the total underlaying {cake} held by the strat.
-     * It takes into account both funds at hand, and the funds allocated in the MasterChef.
+     * @dev Function to calculate the total underlaying {force} held by the strat.
+     * It takes into account both funds at hand, and the funds allocated in the jedimaster.
      */
     function balanceOf() public view returns (uint256) {
-        return balanceOfCake().add(balanceOfPool());
+        return balanceOfForce().add(balanceOfPool());
     }
 
     /**
-     * @dev It calculates how much {cake} the contract holds.
+     * @dev It calculates how much {force} the contract holds.
      */
-    function balanceOfCake() public view returns (uint256) {
-        return IERC20(cake).balanceOf(address(this));
+    function balanceOfForce() public view returns (uint256) {
+        return IERC20(force).balanceOf(address(this));
     }
 
     /**
-     * @dev It calculates how much {cake} the strategy has allocated in the MasterChef
+     * @dev It calculates how much {force} the strategy has allocated in the jedimaster
      */
     function balanceOfPool() public view returns (uint256) {
-        (uint256 _amount, ) = IMasterChef(masterchef).userInfo(0, address(this));
+        (uint256 _amount, ) = IJediMaster(jedimaster).userInfo(0, address(this));
         return _amount;
     }
 
@@ -1308,18 +1298,18 @@ contract StrategyCakeV1 is Ownable, Pausable {
      * vault, ready to be migrated to the new strat.
      */ 
     function retireStrat() external onlyOwner {
-        IMasterChef(masterchef).emergencyWithdraw(0);
+        IJediMaster(jedimaster).emergencyWithdraw(0);
 
-        uint256 cakeBal = IERC20(cake).balanceOf(address(this));
-        IERC20(cake).transfer(vault, cakeBal);
+        uint256 forceBal = IERC20(force).balanceOf(address(this));
+        IERC20(force).transfer(vault, forceBal);
     }
 
     /**
-     * @dev Pauses deposits. Withdraws all funds from the MasterChef, leaving rewards behind
+     * @dev Pauses deposits. Withdraws all funds from the jedimaster, leaving rewards behind
      */
     function panic() external onlyOwner {
         pause();
-        IMasterChef(masterchef).emergencyWithdraw(0);
+        IJediMaster(jedimaster).emergencyWithdraw(0);
     }
 
     /**
@@ -1328,9 +1318,9 @@ contract StrategyCakeV1 is Ownable, Pausable {
     function pause() public onlyOwner {
         _pause();
 
-        IERC20(cake).safeApprove(unirouter, 0);
+        IERC20(force).safeApprove(unirouter, 0);
         IERC20(wbnb).safeApprove(unirouter, 0);
-        IERC20(cake).safeApprove(masterchef, 0);
+        IERC20(force).safeApprove(jedimaster, 0);
     }
 
     /**
@@ -1339,8 +1329,8 @@ contract StrategyCakeV1 is Ownable, Pausable {
     function unpause() external onlyOwner {
         _unpause();
 
-        IERC20(cake).safeApprove(unirouter, uint(-1));
+        IERC20(force).safeApprove(unirouter, uint(-1));
         IERC20(wbnb).safeApprove(unirouter, uint(-1));
-        IERC20(cake).safeApprove(masterchef, uint(-1));
+        IERC20(force).safeApprove(jedimaster, uint(-1));
     }
 }

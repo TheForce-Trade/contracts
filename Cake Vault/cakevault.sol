@@ -909,6 +909,19 @@ contract CakeVaultV1 is ERC20, Ownable {
     IERC20 public token;
     // The minimum time it has to pass before a strat cantidate can be approved.
     uint256 public immutable approvalDelay;
+    
+    /*
+    *non-reentry check
+    *use bool check instead of uint
+    */
+    bool locked;
+
+    modifier noReentrancy() {
+        require(!locked);
+        locked = true;
+        _;
+        locked = false;
+    }
 
     event NewStratCandidate(address implementation);
     event UpgradeStrat(address implementation);
@@ -977,7 +990,7 @@ contract CakeVaultV1 is ERC20, Ownable {
      * @dev The entrypoint of funds into the system. People deposit with this function
      * into the vault. The vault is then in charge of sending funds into the strategy.
      */
-    function deposit(uint _amount) public {
+    function deposit(uint _amount) public noReentrancy {
         uint256 _pool = balance();
         uint256 _before = token.balanceOf(address(this));
         token.safeTransferFrom(msg.sender, address(this), _amount);
@@ -1016,7 +1029,7 @@ contract CakeVaultV1 is ERC20, Ownable {
      * from the strategy and pay up the token holder. A proportional number of IOU
      * tokens are burned in the process.
      */
-    function withdraw(uint256 _shares) public {
+    function withdraw(uint256 _shares) public noReentrancy {
         uint256 r = (balance().mul(_shares)).div(totalSupply());
         _burn(msg.sender, _shares);
 
@@ -1054,7 +1067,7 @@ contract CakeVaultV1 is ERC20, Ownable {
      * candidate implementation is set to the 0x00 address, and proposedTime to a time happening in +100 years for safety. 
      */
 
-    function upgradeStrat() public onlyOwner {
+    function upgradeStrat() public onlyOwner noReentrancy {
         require(stratCandidate.implementation != address(0), "There is no candidate");
         require(stratCandidate.proposedTime.add(approvalDelay) < block.timestamp, "Delay has not passed");
         

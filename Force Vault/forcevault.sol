@@ -1,8 +1,10 @@
+
+
 // SPDX-License-Identifier: MIT
 // File: @openzeppelin/contracts/GSN/Context.sol
 
 
-pragma solidity ^0.6.12;
+pragma solidity ^0.6.0;
 
 /*
  * @dev Provides information about the current execution context, including the
@@ -22,75 +24,6 @@ abstract contract Context {
     function _msgData() internal view virtual returns (bytes memory) {
         this; // silence state mutability warning without generating bytecode - see https://github.com/ethereum/solidity/issues/2691
         return msg.data;
-    }
-}
-
-// File: @openzeppelin/contracts/access/Ownable.sol
-
-
-pragma solidity ^0.6.0;
-
-/**
- * @dev Contract module which provides a basic access control mechanism, where
- * there is an account (an owner) that can be granted exclusive access to
- * specific functions.
- *
- * By default, the owner account will be the one that deploys the contract. This
- * can later be changed with {transferOwnership}.
- *
- * This module is used through inheritance. It will make available the modifier
- * `onlyOwner`, which can be applied to your functions to restrict their use to
- * the owner.
- */
-contract Ownable is Context {
-    address private _owner;
-
-    event OwnershipTransferred(address indexed previousOwner, address indexed newOwner);
-
-    /**
-     * @dev Initializes the contract setting the deployer as the initial owner.
-     */
-    constructor () internal {
-        address msgSender = _msgSender();
-        _owner = msgSender;
-        emit OwnershipTransferred(address(0), msgSender);
-    }
-
-    /**
-     * @dev Returns the address of the current owner.
-     */
-    function owner() public view returns (address) {
-        return _owner;
-    }
-
-    /**
-     * @dev Throws if called by any account other than the owner.
-     */
-    modifier onlyOwner() {
-        require(_owner == _msgSender(), "Ownable: caller is not the owner");
-        _;
-    }
-
-    /**
-     * @dev Leaves the contract without owner. It will not be possible to call
-     * `onlyOwner` functions anymore. Can only be called by the current owner.
-     *
-     * NOTE: Renouncing ownership will leave the contract without an owner,
-     * thereby removing any functionality that is only available to the owner.
-     */
-    function renounceOwnership() public virtual onlyOwner {
-        emit OwnershipTransferred(_owner, address(0));
-        _owner = address(0);
-    }
-
-    /**
-     * @dev Transfers ownership of the contract to a new account (`newOwner`).
-     * Can only be called by the current owner.
-     */
-    function transferOwnership(address newOwner) public virtual onlyOwner {
-        require(newOwner != address(0), "Ownable: new owner is the zero address");
-        emit OwnershipTransferred(_owner, newOwner);
-        _owner = newOwner;
     }
 }
 
@@ -861,251 +794,91 @@ library SafeERC20 {
     }
 }
 
-// File: @openzeppelin/contracts/utils/Pausable.sol
+// File: @openzeppelin/contracts/access/Ownable.sol
 
 
 pragma solidity ^0.6.0;
 
-
 /**
- * @dev Contract module which allows children to implement an emergency stop
- * mechanism that can be triggered by an authorized account.
+ * @dev Contract module which provides a basic access control mechanism, where
+ * there is an account (an owner) that can be granted exclusive access to
+ * specific functions.
  *
- * This module is used through inheritance. It will make available the
- * modifiers `whenNotPaused` and `whenPaused`, which can be applied to
- * the functions of your contract. Note that they will not be pausable by
- * simply including this module, only once the modifiers are put in place.
+ * By default, the owner account will be the one that deploys the contract. This
+ * can later be changed with {transferOwnership}.
+ *
+ * This module is used through inheritance. It will make available the modifier
+ * `onlyOwner`, which can be applied to your functions to restrict their use to
+ * the owner.
  */
-contract Pausable is Context {
-    /**
-     * @dev Emitted when the pause is triggered by `account`.
-     */
-    event Paused(address account);
+contract Ownable is Context {
+    address private _owner;
+
+    event OwnershipTransferred(address indexed previousOwner, address indexed newOwner);
 
     /**
-     * @dev Emitted when the pause is lifted by `account`.
-     */
-    event Unpaused(address account);
-
-    bool private _paused;
-
-    /**
-     * @dev Initializes the contract in unpaused state.
+     * @dev Initializes the contract setting the deployer as the initial owner.
      */
     constructor () internal {
-        _paused = false;
+        address msgSender = _msgSender();
+        _owner = msgSender;
+        emit OwnershipTransferred(address(0), msgSender);
     }
 
     /**
-     * @dev Returns true if the contract is paused, and false otherwise.
+     * @dev Returns the address of the current owner.
      */
-    function paused() public view returns (bool) {
-        return _paused;
+    function owner() public view returns (address) {
+        return _owner;
     }
 
     /**
-     * @dev Modifier to make a function callable only when the contract is not paused.
-     *
-     * Requirements:
-     *
-     * - The contract must not be paused.
+     * @dev Throws if called by any account other than the owner.
      */
-    modifier whenNotPaused() {
-        require(!_paused, "Pausable: paused");
+    modifier onlyOwner() {
+        require(_owner == _msgSender(), "Ownable: caller is not the owner");
         _;
     }
 
     /**
-     * @dev Modifier to make a function callable only when the contract is paused.
+     * @dev Leaves the contract without owner. It will not be possible to call
+     * `onlyOwner` functions anymore. Can only be called by the current owner.
      *
-     * Requirements:
-     *
-     * - The contract must be paused.
+     * NOTE: Renouncing ownership will leave the contract without an owner,
+     * thereby removing any functionality that is only available to the owner.
      */
-    modifier whenPaused() {
-        require(_paused, "Pausable: not paused");
-        _;
+    function renounceOwnership() public virtual onlyOwner {
+        emit OwnershipTransferred(_owner, address(0));
+        _owner = address(0);
     }
 
     /**
-     * @dev Triggers stopped state.
-     *
-     * Requirements:
-     *
-     * - The contract must not be paused.
+     * @dev Transfers ownership of the contract to a new account (`newOwner`).
+     * Can only be called by the current owner.
      */
-    function _pause() internal virtual whenNotPaused {
-        _paused = true;
-        emit Paused(_msgSender());
+    function transferOwnership(address newOwner) public virtual onlyOwner {
+        require(newOwner != address(0), "Ownable: new owner is the zero address");
+        emit OwnershipTransferred(_owner, newOwner);
+        _owner = newOwner;
     }
+}
 
-    /**
-     * @dev Returns to normal state.
-     *
-     * Requirements:
-     *
-     * - The contract must be paused.
-     */
-    function _unpause() internal virtual whenPaused {
-        _paused = false;
-        emit Unpaused(_msgSender());
-    }
+
+
+pragma solidity ^0.6.0;
+
+interface IStrategy {
+    function want() external view returns (address);
+    function deposit() external;
+    function withdraw(uint256) external;
+    function balanceOf() external view returns (uint256);
+    function harvest() external;
 }
 
 
 
 
 pragma solidity ^0.6.0;
-
-interface IUniswapRouter {
-    function factory() external pure returns (address);
-    function WBNB() external pure returns (address);
-
-    function addLiquidity(
-        address tokenA,
-        address tokenB,
-        uint amountADesired,
-        uint amountBDesired,
-        uint amountAMin,
-        uint amountBMin,
-        address to,
-        uint deadline
-    ) external returns (uint amountA, uint amountB, uint liquidity);
-    function addLiquidityBNB(
-        address token,
-        uint amountTokenDesired,
-        uint amountTokenMin,
-        uint amountBNBMin,
-        address to,
-        uint deadline
-    ) external payable returns (uint amountToken, uint amountBNB, uint liquidity);
-    function removeLiquidity(
-        address tokenA,
-        address tokenB,
-        uint liquidity,
-        uint amountAMin,
-        uint amountBMin,
-        address to,
-        uint deadline
-    ) external returns (uint amountA, uint amountB);
-    function removeLiquidityBNB(
-        address token,
-        uint liquidity,
-        uint amountTokenMin,
-        uint amountBNBMin,
-        address to,
-        uint deadline
-    ) external returns (uint amountToken, uint amountBNB);
-    function removeLiquidityWithPermit(
-        address tokenA,
-        address tokenB,
-        uint liquidity,
-        uint amountAMin,
-        uint amountBMin,
-        address to,
-        uint deadline,
-        bool approveMax, uint8 v, bytes32 r, bytes32 s
-    ) external returns (uint amountA, uint amountB);
-    function removeLiquidityBNBWithPermit(
-        address token,
-        uint liquidity,
-        uint amountTokenMin,
-        uint amountBNBMin,
-        address to,
-        uint deadline,
-        bool approveMax, uint8 v, bytes32 r, bytes32 s
-    ) external returns (uint amountToken, uint amountBNB);
-    function removeLiquidityBNBSupportingFeeOnTransferTokens(
-        address token,
-        uint liquidity,
-        uint amountTokenMin,
-        uint amountBNBMin,
-        address to,
-        uint deadline
-    ) external returns (uint amountBNB);
-    function removeLiquidityBNBWithPermitSupportingFeeOnTransferTokens(
-        address token,
-        uint liquidity,
-        uint amountTokenMin,
-        uint amountBNBMin,
-        address to,
-        uint deadline,
-        bool approveMax, uint8 v, bytes32 r, bytes32 s
-    ) external returns (uint amountBNB);
-    function swapExactTokensForTokens(
-        uint amountIn,
-        uint amountOutMin,
-        address[] calldata path,
-        address to,
-        uint deadline
-    ) external returns (uint[] memory amounts);
-    function swapTokensForExactTokens(
-        uint amountOut,
-        uint amountInMax,
-        address[] calldata path,
-        address to,
-        uint deadline
-    ) external returns (uint[] memory amounts);
-    function swapExactTokensForTokensSupportingFeeOnTransferTokens(
-        uint amountIn,
-        uint amountOutMin,
-        address[] calldata path,
-        address to,
-        uint deadline
-    ) external;
-    function swapExactBNBForTokensSupportingFeeOnTransferTokens(
-        uint amountOutMin,
-        address[] calldata path,
-        address to,
-        uint deadline
-    ) external payable;
-    function swapExactTokensForBNBSupportingFeeOnTransferTokens(
-        uint amountIn,
-        uint amountOutMin,
-        address[] calldata path,
-        address to,
-        uint deadline
-    ) external;
-    function swapExactBNBForTokens(uint amountOutMin, address[] calldata path, address to, uint deadline)
-        external
-        payable
-        returns (uint[] memory amounts);
-    function swapTokensForExactBNB(uint amountOut, uint amountInMax, address[] calldata path, address to, uint deadline)
-        external
-        returns (uint[] memory amounts);
-    function swapExactTokensForBNB(uint amountIn, uint amountOutMin, address[] calldata path, address to, uint deadline)
-        external
-        returns (uint[] memory amounts);
-    function swapBNBForExactTokens(uint amountOut, address[] calldata path, address to, uint deadline)
-        external
-        payable
-        returns (uint[] memory amounts);
-
-    function quote(uint amountA, uint reserveA, uint reserveB) external pure returns (uint amountB);
-    function getAmountOut(uint amountIn, uint reserveIn, uint reserveOut) external pure returns (uint amountOut);
-    function getAmountIn(uint amountOut, uint reserveIn, uint reserveOut) external pure returns (uint amountIn);
-    function getAmountsOut(uint amountIn, address[] calldata path) external view returns (uint[] memory amounts);
-    function getAmountsIn(uint amountOut, address[] calldata path) external view returns (uint[] memory amounts);
-}
-
-
-
-
-
-
-interface IJediMaster {
-    function deposit(uint256 _pid, uint256 _amount) external;
-    function withdraw(uint256 _pid, uint256 _amount) external;
-    function enterStaking(uint256 _amount) external;
-    function leaveStaking(uint256 _amount) external;
-    function pendingForce(uint256 _pid, address _user) external view returns (uint256);
-    function userInfo(uint256 _pid, address _user) external view returns (uint256, uint256);
-    function emergencyWithdraw(uint256 _pid) external;
-}
-
-
-
-
 
 
 
@@ -1114,212 +887,196 @@ interface IJediMaster {
 
 
 /**
- * @title Strategy Force V1
- * @author theforce_team
- * @dev Implementation of a strategy to get yields from farming a force pool. 
- *
- * The strategy simply deposits whatever funds it receives from the vault into the jedimaster.
- * Rewards from the jedimaster can be regularly compounded.
+ * @dev Implementation of a vault to deposit funds for yield optimizing.
+ * This is the contract that receives funds and that users interface with.
+ * The yield optimizing strategy itself is implemented in a separate 'Strategy.sol' contract.
  */
-contract ForceStrategyV1 is Ownable, Pausable {
+contract ForceVaultV1 is ERC20, Ownable {
     using SafeERC20 for IERC20;
     using Address for address;
     using SafeMath for uint256;
 
-    /**
-     * @dev Tokens Used:
-     * {wbnb} - Required for liquidity routing when doing swaps.
-     * {force} - Token that the strategy maximizes. The same token that users deposit in the vault.
-     */
-    address constant public wbnb = address(0xae13d989daC2f0dEbFf460aC112a837C89BAa7cd);
-    address constant public force = address(0xac04154Af29Fe013DBb2ae1aE83c97E1ff64071A);
- 
-
-    /**
-     * @dev router and staking Contracts:
-     * {unirouter} - PancakeSwap unirouter
-     * {jedimaster} - Master staking contract. Stake force, get rewards.
-     */
-    address constant public unirouter  = address(0xD99D1c33F9fC3444f8101754aBC46c52416550D1);
-    address constant public jedimaster = address(0x64494e492C93Fced7A8993dbFbC35A1c7543C9f6);
-
-    /**
-     * @dev 
-     * {treasury} - Address of the force community treasury
-     * {vault} - Address of the vault, to be set in constructor.
-     */
-    address constant public treasury = address(0xB3A7Ab9D9FFD1Eb288Bc46efd448A633C95Ca550);
-    address public vault;
-
-    /**
-     * @dev Distribution of fees earned. This allocations relative to the % implemented on chargeFees().
-     * Current implementation separates 4% for fees.
-     *
-     * {CALL_FEE} - 0.5% goes to whoever executes the harvest function as gas subsidy.
-     * {TREASURY_FEE} - 4.0% goes to the community managed force {treasury}.
-     * {MAX_FEE} - Max const used to safely calc the correct amounts.
-     *
-     * {WITHDRAWAL_FEE} - Fee taxed when a user withdraws funds. 1 === 0.1% fee.
-     * 
-     */
-    uint constant public CALL_FEE     = 5;
-    uint constant public TREASURY_FEE = 40;
-    uint constant public MAX_FEE      = 1000;
-    uint constant public WITHDRAWAL_FEE = 1;
-
-
-    /**
-     * @dev Routes we take to swap tokens using PancakeSwap.
-     * {forceToWbnbRoute} - Route we take to go from {force} into {wbnb}.
-     */
-    address[] public forceToWbnbRoute = [force, wbnb];
-
-    /**
-     * @dev Initializes the strategy with the token that it will look to maximize.
-     * @param _vault Address of parent vault
-     */
-    constructor(address _vault) public {
-        vault = _vault;
-
-        IERC20(force).safeApprove(unirouter, uint(-1));
-        IERC20(wbnb).safeApprove(unirouter, uint(-1));
-        IERC20(force).safeApprove(jedimaster, uint(-1));
+    struct StratCandidate {
+        address implementation;
+        uint proposedTime;
     }
 
-    /**
-     * @dev Function that puts the funds to work.
-     * It gets called whenever someone deposits in the strategy's vault contract.
-     * It deposits force in the jedimaster to earn rewards in force.
-     */
-    function deposit() public whenNotPaused {
-        uint256 forceBal = IERC20(force).balanceOf(address(this));
+    // The last proposed strategy to switch to.
+    StratCandidate public stratCandidate; 
+    // The strategy currently in use by the vault.
+    address public strategy;
+    // The token the vault accepts and looks to maximize.
+    IERC20 public token;
+    // The minimum time it has to pass before a strat cantidate can be approved.
+    uint256 public immutable approvalDelay;
 
-        if (forceBal > 0) {
-            IJediMaster(jedimaster).enterStaking(forceBal);
-        }
+    /*
+    *non-reentry check
+    *use bool check instead of uint
+    */
+    bool locked;
+
+    modifier noReentrancy() {
+        require(!locked);
+        locked = true;
+        _;
+        locked = false;
     }
 
-    /**
-     * @dev It withdraws {force} from the jedimaster and sends it to the vault. The contract owner
-     * doesn't pay withdrawal fees. 
-     * 
-     * @param _amount How much {force} to withdraw.
-     */
-    function withdraw(uint256 _amount) external {
-        require(msg.sender == vault, "!vault");
-
-        uint256 forceBal = IERC20(force).balanceOf(address(this));
-
-        if (forceBal < _amount) {
-            IJediMaster(jedimaster).leaveStaking(_amount.sub(forceBal));
-            forceBal = IERC20(force).balanceOf(address(this));
-        }
-
-        if (forceBal > _amount) {
-            forceBal = _amount;    
-        }
-        
-        if (tx.origin == owner()) {
-            IERC20(force).safeTransfer(vault, forceBal); 
-        } else {
-            uint256 withdrawalFee = forceBal.mul(WITHDRAWAL_FEE).div(MAX_FEE);
-            IERC20(force).safeTransfer(vault, forceBal.sub(withdrawalFee)); 
-        }
-    }
-
-    /**
-     * @dev Core function of the strat, in charge of collecting and re-investing rewards.
-     * 1. It claims rewards from the jedimaster
-     * 3. It charges the system fee and sends it to community Treasury.
-     * 4. It re-invests the remaining profits.
-     */
-    function harvest() external whenNotPaused {
-        require(!Address.isContract(msg.sender), "!contract");
-        IJediMaster(jedimaster).leaveStaking(0);
-        chargeFees();
-        deposit();
-    }
-
-    /**
-     * @dev Takes out 4% as system fees from the rewards. 
-     * 0.5% -> call fee
-     * 4.0%  -> Treasury fee
-     */
-    function chargeFees() internal {
-        uint256 forceBal = IERC20(force).balanceOf(address(this));
-        
-        uint256 toWbnb = forceBal.mul(CALL_FEE).div(MAX_FEE);
-        uint256 toForce = forceBal.mul(TREASURY_FEE).div(MAX_FEE);
-
-        IUniswapRouter(unirouter).swapExactTokensForTokens(toWbnb, 0, forceToWbnbRoute, address(this), now.add(600));
-        uint256 wbnbBal = IERC20(wbnb).balanceOf(address(this));
-        IERC20(wbnb).safeTransfer(msg.sender, wbnbBal);
-        
-        IERC20(force).safeTransfer(treasury, toForce);
+    event NewStratCandidate(address implementation);
+    event UpgradeStrat(address implementation);
     
-    }
-
     /**
-     * @dev Function to calculate the total underlaying {force} held by the strat.
-     * It takes into account both funds at hand, and the funds allocated in the jedimaster.
+     * @dev Sets the value of {token} to the token that the vault will
+     * hold as underlying value. It initializes the vault's own 'moo' token.
+     * This token is minted when someone does a deposit. It is burned in order
+     * to withdraw the corresponding portion of the underlying assets.
+     * @param _token the token to maximize.
+     * @param _strategy the address of the strategy.
+     * @param _name the name of the vault token.
+     * @param _symbol the symbol of the vault token.
+     * @param _approvalDelay the delay before a new strat can be approved.
      */
-    function balanceOf() public view returns (uint256) {
-        return balanceOfForce().add(balanceOfPool());
+    constructor (
+        address _token, 
+        address _strategy, 
+        string memory _name, 
+        string memory _symbol, 
+        uint256 _approvalDelay
+    ) public ERC20(
+        string(abi.encodePacked(_name)),
+        string(abi.encodePacked(_symbol))
+    ) {
+        token = IERC20(_token);
+        strategy = _strategy;
+        approvalDelay = _approvalDelay;
     }
 
     /**
-     * @dev It calculates how much {force} the contract holds.
+     * @dev It calculates the total underlying value of {token} held by the system.
+     * It takes into account the vault contract balance, the strategy contract balance
+     *  and the balance deployed in other contracts as part of the strategy.
      */
-    function balanceOfForce() public view returns (uint256) {
-        return IERC20(force).balanceOf(address(this));
+    function balance() public view returns (uint) {
+        return token.balanceOf(address(this)).add(IStrategy(strategy).balanceOf());
     }
 
     /**
-     * @dev It calculates how much {force} the strategy has allocated in the jedimaster
+     * @dev Custom logic in here for how much the vault allows to be borrowed.
+     * We return 100% of tokens for now. Under certain conditions we might
+     * want to keep some of the system funds at hand in the vault, instead
+     * of putting them to work.
      */
-    function balanceOfPool() public view returns (uint256) {
-        (uint256 _amount, ) = IJediMaster(jedimaster).userInfo(0, address(this));
-        return _amount;
+    function available() public view returns (uint256) {
+        return token.balanceOf(address(this));
     }
 
     /**
-     * @dev Function that has to be called as part of strat migration. It sends all the available funds back to the 
-     * vault, ready to be migrated to the new strat.
-     */ 
-    function retireStrat() external onlyOwner {
-        IJediMaster(jedimaster).emergencyWithdraw(0);
-
-        uint256 forceBal = IERC20(force).balanceOf(address(this));
-        IERC20(force).transfer(vault, forceBal);
-    }
-
-    /**
-     * @dev Pauses deposits. Withdraws all funds from the jedimaster, leaving rewards behind
+     * @dev Function for various UIs to display the current value of one of our yield tokens.
+     * Returns an uint256 with 18 decimals of how much underlying asset one vault share represents.
      */
-    function panic() external onlyOwner {
-        pause();
-        IJediMaster(jedimaster).emergencyWithdraw(0);
+    function getPricePerFullShare() public view returns (uint256) {
+        return balance().mul(1e18).div(totalSupply());
     }
 
     /**
-     * @dev Pauses the strat.
+     * @dev A helper function to call deposit() with all the sender's funds.
      */
-    function pause() public onlyOwner {
-        _pause();
-
-        IERC20(force).safeApprove(unirouter, 0);
-        IERC20(wbnb).safeApprove(unirouter, 0);
-        IERC20(force).safeApprove(jedimaster, 0);
+    function depositAll() external {
+        deposit(token.balanceOf(msg.sender));
     }
 
     /**
-     * @dev Unpauses the strat.
+     * @dev The entrypoint of funds into the system. People deposit with this function
+     * into the vault. The vault is then in charge of sending funds into the strategy.
      */
-    function unpause() external onlyOwner {
-        _unpause();
+    function deposit(uint _amount) public noReentrancy {
+        uint256 _pool = balance();
+        uint256 _before = token.balanceOf(address(this));
+        token.safeTransferFrom(msg.sender, address(this), _amount);
+        uint256 _after = token.balanceOf(address(this));
+        _amount = _after.sub(_before); // Additional check for deflationary tokens
+        uint256 shares = 0;
+        if (totalSupply() == 0) {
+            shares = _amount;
+        } else {
+            shares = (_amount.mul(totalSupply())).div(_pool);
+        }
+        _mint(msg.sender, shares);
 
-        IERC20(force).safeApprove(unirouter, uint(-1));
-        IERC20(wbnb).safeApprove(unirouter, uint(-1));
-        IERC20(force).safeApprove(jedimaster, uint(-1));
+        earn();
+    }
+
+    /**
+     * @dev Function to send funds into the strategy and put them to work. It's primarily called
+     * by the vault's deposit() function.
+     */
+    function earn() public {
+        uint _bal = available();
+        token.safeTransfer(strategy, _bal);
+        IStrategy(strategy).deposit();
+    }
+
+    /**
+     * @dev A helper function to call withdraw() with all the sender's funds.
+     */
+    function withdrawAll() external {
+        withdraw(balanceOf(msg.sender));
+    }
+
+    /**
+     * @dev Function to exit the system. The vault will withdraw the required tokens
+     * from the strategy and pay up the token holder. A proportional number of IOU
+     * tokens are burned in the process.
+     */
+    function withdraw(uint256 _shares) public noReentrancy {
+        uint256 r = (balance().mul(_shares)).div(totalSupply());
+        _burn(msg.sender, _shares);
+
+        uint b = token.balanceOf(address(this));
+        if (b < r) {
+            uint _withdraw = r.sub(b);
+            IStrategy(strategy).withdraw(_withdraw);
+            uint _after = token.balanceOf(address(this));
+            uint _diff = _after.sub(b);
+            if (_diff < _withdraw) {
+                r = b.add(_diff);
+            }
+        }
+
+        token.safeTransfer(msg.sender, r);
+    }
+
+    /** 
+     * @dev Sets the candidate for the new strat to use with this vault.
+     * @param _implementation The address of the candidate strategy.  
+     */
+    function proposeStrat(address _implementation) public onlyOwner {
+        stratCandidate = StratCandidate({ 
+            implementation: _implementation,
+            proposedTime: block.timestamp
+         });
+
+        emit NewStratCandidate(_implementation);
+    }
+
+    /** 
+     * @dev It switches the active strat for the strat candidate. You have to call 'retireStrat'
+     * in the strategy contract before. This pauses the old strat and makes sure that all the old 
+     * strategy funds are sent back to this vault before switching strats. When upgrading, the 
+     * candidate implementation is set to the 0x00 address, and proposedTime to a time happening in +100 years for safety. 
+     */
+
+    function upgradeStrat() public onlyOwner noReentrancy {
+        require(stratCandidate.implementation != address(0), "There is no candidate");
+        require(stratCandidate.proposedTime.add(approvalDelay) < block.timestamp, "Delay has not passed");
+        
+        emit UpgradeStrat(stratCandidate.implementation);
+
+        strategy = stratCandidate.implementation;
+        stratCandidate.implementation = address(0);
+        stratCandidate.proposedTime = 1;
+        
+        earn();
     }
 }
