@@ -2,11 +2,13 @@ Testnet set up for cake staking
 
 ***Replicate the following test case with your own test account on BSC test net***
 
---provided by bsc, do not deplicate, just use them as is.
+Those are provided by bsc, do not deplicate, just use them as is.
+
 *wbnb	0xae13d989daC2f0dEbFf460aC112a837C89BAa7cd
+
 *router	0xD99D1c33F9fC3444f8101754aBC46c52416550D1
 
---dev address
+--dev address. use your own address.
 *dev	        0x66Df3997298996c363c2bFd23b6ffDC337e106f7
 *dev2		0x89418106a7970d14E7Af8fCC69032Df3d069dADc
 
