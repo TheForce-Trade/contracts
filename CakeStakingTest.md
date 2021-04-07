@@ -18,15 +18,17 @@ Those two are provided by bsc, do not deplicate, just use them as is.
 
 *masterchef:  0xf088d241e9bFD6427C82D07985B3e3e244DDCD2A //set cakeperblock 40000000000000000000 ie.40, startblock 7746555 
 
-/*note to transfer cake and syrup ownership to masterchef*/
+***note to transfer cake and syrup ownership to masterchef***
 
 *forcetreasury:   0x23D3C41ef4354D29dD74D40B86c15d6DB57381f8 //used to receive 4% fee rewards from staking in masterchef
 
 *cakevault:   0x917F4Cf47c6AcE22F6E72436ac7bF27a507144AA   //set name: "CakeVault LP", "CVLP" //set delay:1 //set strategy: use any strategy address, which will be replaced later
 
-*cake strategy:   0xB7282a710a840Ac6A69936b7096c8a2134fA6EB4 //go to vault and propose strategy address to 0xB7282a710a840Ac6A69936b7096c8a2134fA6EB4  , then upgrade strategy
+***Change hard-coded token addresses in strategy contract***
 
-***add liquidity. Use router address.***
+*cake strategy:   0xB7282a710a840Ac6A69936b7096c8a2134fA6EB4 //go back to vault and propose strategy address to 0xB7282a710a840Ac6A69936b7096c8a2134fA6EB4  , then upgrade strategy
+
+***Add liquidity. Use router address.***
 
 When testing, make sure the liquidity pool is big enough, and not easily exhausted by swapping reward fees. Be aware of your BNB balance!
 
