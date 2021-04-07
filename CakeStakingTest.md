@@ -1,4 +1,10 @@
-Testnet set up for cake staking 
+**Testnet set up for cake staking**
+
+>*Flow of deposit funds: User calls Deposit() in Vault -> Transfer to Strategy -> Transfer to Masterchef*
+
+>*Flow of withdraw funds: User calls Withdraw() in Vault -> calls Withdraw() in Strategy -> calls Withdraw() or leaveStaking() in Masterchef*
+
+>*Flow of rewards: Admin calls Harvest() in Strategy -> calls Masterchef to send out pending reward to Strategy -> Strategy Swaps 0.5% rewards to WBNB and send to caller as gas subsidy, and sends 4% rewards to Treasury, and deposit the remaining 95.5% rewards to Masterchef*
 
 ***Replicate the following test case with your own test account on BSC test net***
 
@@ -26,7 +32,7 @@ Those two are provided by bsc, do not deplicate, just use them as is.
 
 ***Change hard-coded token addresses in strategy contract***
 
-*cake strategy:   0xB7282a710a840Ac6A69936b7096c8a2134fA6EB4 //go back to vault and propose strategy address to 0xB7282a710a840Ac6A69936b7096c8a2134fA6EB4  , then upgrade strategy
+*cake strategy:   0xB7282a710a840Ac6A69936b7096c8a2134fA6EB4 //go back to vault and propose strategy address to 0xB7282a710a840Ac6A69936b7096c8a2134fA6EB4  , then call upgrade strategy
 
 ***Add liquidity. Use router address.***
 
