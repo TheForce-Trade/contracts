@@ -53,3 +53,4 @@ Then call Harvest() function in cake strategy, check transaction details to see 
 example tx: https://testnet.bscscan.com/tx/0x7b128bd74689175cd3609f529f98e8582aab54304ede1d32be0678fa555a7ac9
 
 Multicall: 0x74334E057581A8E1FFB1Ef0187DeFEe00B22e51a
+bnbshim: 0x161Aab36e6dCE297d43a1Bba813031728ffEE305
