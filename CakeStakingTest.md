@@ -51,3 +51,5 @@ First Allow vault to spend cake, then use vault's deposit() to deposit cake to v
 Then call Harvest() function in cake strategy, check transaction details to see if success. Contact owner can set admins; only admins can call Harvest()
 
 example tx: https://testnet.bscscan.com/tx/0x7b128bd74689175cd3609f529f98e8582aab54304ede1d32be0678fa555a7ac9
+
+Multicall: 0x74334E057581A8E1FFB1Ef0187DeFEe00B22e51a
