@@ -337,8 +337,6 @@ library SafeMath {
 // File: @openzeppelin/contracts/utils/Address.sol
 
 
-pragma solidity ^0.6.2;
-
 /**
  * @dev Collection of functions related to the address type
  */
