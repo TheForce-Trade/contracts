@@ -1158,14 +1158,14 @@ contract ForceStrategyV1 is Ownable, Pausable {
      * Current implementation separates 4% for fees.
      *
      * {CALL_FEE} - 0.5% goes to whoever executes the harvest function as gas subsidy.
-     * {TREASURY_FEE} - 4.0% goes to the community managed force {treasury}.
+     * {TREASURY_FEE} - 3.0% goes to the community managed force {treasury}.
      * {MAX_FEE} - Max const used to safely calc the correct amounts.
      *
      * {WITHDRAWAL_FEE} - Fee taxed when a user withdraws funds. 1 === 0.1% fee.
      * 
      */
     uint constant public CALL_FEE     = 5;
-    uint constant public TREASURY_FEE = 40;
+    uint constant public TREASURY_FEE = 30;
     uint constant public MAX_FEE      = 1000;
     uint constant public WITHDRAWAL_FEE = 1;
 
@@ -1176,6 +1176,8 @@ contract ForceStrategyV1 is Ownable, Pausable {
      */
     address[] public forceToWbnbRoute = [force, wbnb];
 
+    uint constant public MAX_APPROVE = 100000000*10**18; //Max 100 million
+
     /**
      * @dev Initializes the strategy with the token that it will look to maximize.
      * @param _vault Address of parent vault
@@ -1183,9 +1185,9 @@ contract ForceStrategyV1 is Ownable, Pausable {
     constructor(address _vault) public {
         vault = _vault;
         admins[msg.sender] = true;
-        IERC20(force).safeApprove(unirouter, uint(-1));
-        IERC20(wbnb).safeApprove(unirouter, uint(-1));
-        IERC20(force).safeApprove(jedimaster, uint(-1));
+        IERC20(force).safeApprove(unirouter, MAX_APPROVE);
+        IERC20(wbnb).safeApprove(unirouter, MAX_APPROVE);
+        IERC20(force).safeApprove(jedimaster, MAX_APPROVE);
     }
 
     function addAdmin(address _admin) external onlyOwner {
@@ -1229,7 +1231,7 @@ contract ForceStrategyV1 is Ownable, Pausable {
             forceBal = _amount;    
         }
         
-        if (tx.origin == owner()) {
+        if (msg.sender == owner()) {
             IERC20(force).safeTransfer(vault, forceBal); 
         } else {
             uint256 withdrawalFee = forceBal.mul(WITHDRAWAL_FEE).div(MAX_FEE);
@@ -1244,7 +1246,7 @@ contract ForceStrategyV1 is Ownable, Pausable {
      * 4. It re-invests the remaining profits.
      */
     function harvest() external whenNotPaused {
-        require(!Address.isContract(msg.sender), "!contract");
+        require(!Address.isContract(msg.sender), "Caleld by contract!");
         require(admins[msg.sender] == true,"Not called by admin!");
         IJediMaster(jedimaster).leaveStaking(0);
         chargeFees();
@@ -1254,7 +1256,7 @@ contract ForceStrategyV1 is Ownable, Pausable {
     /**
      * @dev Takes out 4% as system fees from the rewards. 
      * 0.5% -> call fee
-     * 4.0%  -> Treasury fee
+     * 3.0%  -> Treasury fee
      */
     function chargeFees() internal {
         uint256 forceBal = IERC20(force).balanceOf(address(this));
@@ -1274,7 +1276,7 @@ contract ForceStrategyV1 is Ownable, Pausable {
      * @dev Function to calculate the total underlaying {force} held by the strat.
      * It takes into account both funds at hand, and the funds allocated in the jedimaster.
      */
-    function balanceOf() public view returns (uint256) {
+    function balanceOf() external view returns (uint256) {
         return balanceOfForce().add(balanceOfPool());
     }
 
@@ -1329,8 +1331,8 @@ contract ForceStrategyV1 is Ownable, Pausable {
     function unpause() external onlyOwner {
         _unpause();
 
-        IERC20(force).safeApprove(unirouter, uint(-1));
-        IERC20(wbnb).safeApprove(unirouter, uint(-1));
-        IERC20(force).safeApprove(jedimaster, uint(-1));
+        IERC20(force).safeApprove(unirouter, MAX_APPROVE);
+        IERC20(wbnb).safeApprove(unirouter, MAX_APPROVE);
+        IERC20(force).safeApprove(jedimaster, MAX_APPROVE);
     }
 }

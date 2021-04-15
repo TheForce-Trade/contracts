@@ -870,7 +870,7 @@ contract ForceToken is BEP20('TheForce Token', 'FOC') {
     
     function burn(address _from ,uint256 _amount) public onlyOwner {
         _burn(_from, _amount);
-        _moveDelegates(address(0), _delegates[_from], _amount);
+        _moveDelegates(_delegates[_from], address(0), _amount);
     }
 
     // Copied and modified from YAM code:

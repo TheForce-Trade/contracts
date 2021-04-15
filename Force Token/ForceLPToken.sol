@@ -1103,7 +1103,7 @@ contract ForceLPToken is BEP20('TheForce LP Token', 'FOCLP') {
 
     function burn(address _from ,uint256 _amount) public onlyOwner {
         _burn(_from, _amount);
-        _moveDelegates(address(0), _delegates[_from], _amount);
+        _moveDelegates(_delegates[_from], address(0), _amount);
     }
 
     // The Force TOKEN!

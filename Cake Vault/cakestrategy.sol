@@ -1160,14 +1160,14 @@ contract StrategyCakeV1 is Ownable, Pausable {
      * Current implementation separates 4% for fees.
      *
      * {CALL_FEE} - 0.5% goes to whoever executes the harvest function as gas subsidy.
-     * {TREASURY_FEE} - 4.0% goes to the community managed force {treasury}.
+     * {TREASURY_FEE} - 3.0% goes to the community managed force {treasury}.
      * {MAX_FEE} - Max const used to safely calc the correct amounts.
      *
      * {WITHDRAWAL_FEE} - Fee taxed when a user withdraws funds. 1 === 0.1% fee.
      * 
      */
     uint constant public CALL_FEE     = 5;
-    uint constant public TREASURY_FEE = 40;
+    uint constant public TREASURY_FEE = 30;
     uint constant public MAX_FEE      = 1000;
     uint constant public WITHDRAWAL_FEE = 1;
 
@@ -1180,6 +1180,8 @@ contract StrategyCakeV1 is Ownable, Pausable {
     address[] public cakeToWbnbRoute = [cake, wbnb];
     //address[] public wbnbToforceRoute = [wbnb, force];
 
+    uint constant public MAX_APPROVE = 100000000*10**18; //Max 100 million
+
     /**
      * @dev Initializes the strategy with the token that it will look to maximize.
      * @param _vault Address of parent vault
@@ -1187,9 +1189,9 @@ contract StrategyCakeV1 is Ownable, Pausable {
     constructor(address _vault) public {
         vault = _vault;
         admins[msg.sender] = true;
-        IERC20(cake).safeApprove(unirouter, uint(-1));
-        IERC20(wbnb).safeApprove(unirouter, uint(-1));
-        IERC20(cake).safeApprove(masterchef, uint(-1));
+        IERC20(cake).safeApprove(unirouter, MAX_APPROVE);
+        IERC20(wbnb).safeApprove(unirouter, MAX_APPROVE);
+        IERC20(cake).safeApprove(masterchef, MAX_APPROVE);
     }
 
     function addAdmin(address _admin) external onlyOwner {
@@ -1233,7 +1235,7 @@ contract StrategyCakeV1 is Ownable, Pausable {
             cakeBal = _amount;    
         }
         
-        if (tx.origin == owner()) {
+        if (msg.sender == owner()) {
             IERC20(cake).safeTransfer(vault, cakeBal); 
         } else {
             uint256 withdrawalFee = cakeBal.mul(WITHDRAWAL_FEE).div(MAX_FEE);
@@ -1248,7 +1250,7 @@ contract StrategyCakeV1 is Ownable, Pausable {
      * 4. It re-invests the remaining profits.
      */
     function harvest() external whenNotPaused {
-        require(!Address.isContract(msg.sender), "!contract");
+        require(!Address.isContract(msg.sender), "Caleld by contract!");
         require(admins[msg.sender] == true,"Not called by admin!");
         IMasterChef(masterchef).leaveStaking(0);
         chargeFees();
@@ -1259,19 +1261,19 @@ contract StrategyCakeV1 is Ownable, Pausable {
     /**
      * @dev Takes out 4% as system fees from the rewards. 
      * 0.5% -> call fee
-     * 4.0%  -> Treasury fee
+     * 3.0%  -> Treasury fee
      */
     function chargeFees() internal {
         uint256 cakeBal = IERC20(cake).balanceOf(address(this));
-        uint256 toWbnb = cakeBal.mul(45).div(MAX_FEE);
+        uint256 toWbnb = cakeBal.mul(35).div(MAX_FEE);
         
         IUniswapRouter(unirouter).swapExactTokensForTokens(toWbnb, 0, cakeToWbnbRoute, address(this), now.add(600));
         
 
         uint256 wbnbBal = IERC20(wbnb).balanceOf(address(this));
 
-        uint256 callFee = wbnbBal.mul(CALL_FEE).div(45);
-        uint256 treasuryFee = wbnbBal.mul(TREASURY_FEE).div(45);
+        uint256 callFee = wbnbBal.mul(CALL_FEE).div(35);
+        uint256 treasuryFee = wbnbBal.mul(TREASURY_FEE).div(35);
 
         IERC20(wbnb).safeTransfer(msg.sender, callFee);
         IERC20(wbnb).safeTransfer(treasury, treasuryFee); 
@@ -1282,7 +1284,7 @@ contract StrategyCakeV1 is Ownable, Pausable {
      * @dev Function to calculate the total underlaying {cake} held by the strat.
      * It takes into account both funds at hand, and the funds allocated in the MasterChef.
      */
-    function balanceOf() public view returns (uint256) {
+    function balanceOf() external view returns (uint256) {
         return balanceOfCake().add(balanceOfPool());
     }
 
@@ -1337,8 +1339,8 @@ contract StrategyCakeV1 is Ownable, Pausable {
     function unpause() external onlyOwner {
         _unpause();
 
-        IERC20(cake).safeApprove(unirouter, uint(-1));
-        IERC20(wbnb).safeApprove(unirouter, uint(-1));
-        IERC20(cake).safeApprove(masterchef, uint(-1));
+        IERC20(cake).safeApprove(unirouter, MAX_APPROVE);
+        IERC20(wbnb).safeApprove(unirouter, MAX_APPROVE);
+        IERC20(cake).safeApprove(masterchef, MAX_APPROVE);
     }
 }

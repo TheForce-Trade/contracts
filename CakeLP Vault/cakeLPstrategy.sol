@@ -1165,14 +1165,14 @@ contract StrategyCakeLPV1 is Ownable, Pausable {
      * Current implementation separates 4% for fees.
      *
      * {CALL_FEE} - 0.5% goes to whoever executes the harvest function as gas subsidy.
-     * {TREASURY_FEE} - 4.0% goes to the community managed force {treasury}.
+     * {TREASURY_FEE} - 3.0% goes to the community managed force {treasury}.
      * {MAX_FEE} - Max const used to safely calc the correct amounts.
      *
      * {WITHDRAWAL_FEE} - Fee taxed when a user withdraws funds. 1 === 0.1% fee.
      * 
      */
     uint constant public CALL_FEE     = 5;
-    uint constant public TREASURY_FEE = 40;
+    uint constant public TREASURY_FEE = 30;
     uint constant public MAX_FEE      = 1000;
     uint constant public WITHDRAWAL_FEE = 1;
 
@@ -1186,6 +1186,8 @@ contract StrategyCakeLPV1 is Ownable, Pausable {
     address[] public cakeToWbnbRoute = [cake, wbnb];
     address[] public cakeToLp0Route;
     address[] public cakeToLp1Route;
+
+    uint constant public MAX_APPROVE = 100000000*10**18; //Max 100 million
 
     /**
      * @dev Initializes the strategy with the token that it will look to maximize.
@@ -1211,14 +1213,14 @@ contract StrategyCakeLPV1 is Ownable, Pausable {
             cakeToLp1Route = [cake, wbnb, lpToken1];
         }
 
-        IERC20(cake).safeApprove(unirouter, uint(-1));
-        IERC20(wbnb).safeApprove(unirouter, uint(-1));
+        IERC20(cake).safeApprove(unirouter, MAX_APPROVE);
+        IERC20(wbnb).safeApprove(unirouter, MAX_APPROVE);
 
         IERC20(lpToken0).safeApprove(unirouter, 0);
-        IERC20(lpToken0).safeApprove(unirouter, uint(-1));
+        IERC20(lpToken0).safeApprove(unirouter, MAX_APPROVE);
 
         IERC20(lpToken1).safeApprove(unirouter, 0);
-        IERC20(lpToken1).safeApprove(unirouter, uint(-1));
+        IERC20(lpToken1).safeApprove(unirouter, MAX_APPROVE);
     }
 
     function addAdmin(address _admin) external onlyOwner {
@@ -1263,7 +1265,7 @@ contract StrategyCakeLPV1 is Ownable, Pausable {
             pairBal = _amount;    
         }
         
-        if (tx.origin == owner()) {
+        if (msg.sender == owner()) {
             IERC20(lpPair).safeTransfer(vault, pairBal); 
         } else {
             uint256 withdrawalFee = pairBal.mul(WITHDRAWAL_FEE).div(MAX_FEE);
@@ -1280,7 +1282,7 @@ contract StrategyCakeLPV1 is Ownable, Pausable {
      * 5. It deposits the new LP tokens.
      */
     function harvest() external whenNotPaused {
-        require(!Address.isContract(msg.sender), "!contract");
+        require(!Address.isContract(msg.sender), "Caleld by contract!");
         require(admins[msg.sender] == true,"Not called by admin!");
         IMasterChef(masterchef).deposit(poolId, 0);
         chargeFees();
@@ -1292,19 +1294,19 @@ contract StrategyCakeLPV1 is Ownable, Pausable {
     /**
      * @dev Takes out 4.5% as system fees from the rewards. 
      * 0.5% -> call fee
-     * 4.0%  -> Treasury fee
+     * 3.0%  -> Treasury fee
      */
     function chargeFees() internal {
         uint256 cakeBal = IERC20(cake).balanceOf(address(this));
-        uint256 toWbnb = cakeBal.mul(45).div(MAX_FEE);
+        uint256 toWbnb = cakeBal.mul(35).div(MAX_FEE);
         
         IUniswapRouter(unirouter).swapExactTokensForTokens(toWbnb, 0, cakeToWbnbRoute, address(this), now.add(600));
         
 
         uint256 wbnbBal = IERC20(wbnb).balanceOf(address(this));
 
-        uint256 callFee = wbnbBal.mul(CALL_FEE).div(45);
-        uint256 treasuryFee = wbnbBal.mul(TREASURY_FEE).div(45);
+        uint256 callFee = wbnbBal.mul(CALL_FEE).div(35);
+        uint256 treasuryFee = wbnbBal.mul(TREASURY_FEE).div(35);
 
         IERC20(wbnb).safeTransfer(msg.sender, callFee);
         IERC20(wbnb).safeTransfer(treasury, treasuryFee); 
@@ -1345,7 +1347,7 @@ contract StrategyCakeLPV1 is Ownable, Pausable {
      * @dev Function to calculate the total underlaying {lpPair} held by the strat.
      * It takes into account both the funds in hand, as the funds allocated in the MasterChef.
      */
-    function balanceOf() public view returns (uint256) {
+    function balanceOf() external view returns (uint256) {
         return balanceOfLpPair().add(balanceOfPool());
     }
 
