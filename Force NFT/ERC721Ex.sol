@@ -17,7 +17,7 @@ abstract contract ERC721Ex is ERC721, Member {
 
     uint256 public totalSupply = 0;
 
-    string public uriPrefix = "http://api.dgqxyc.com/";
+    string public uriPrefix = "http://api.theforce.trade/";
 
     function _mint(address to, uint256 tokenId) internal {
         _addTokenTo(to, tokenId);
