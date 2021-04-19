@@ -793,6 +793,7 @@ contract BEP20 is Context, IBEP20, Ownable {
      */
     function _mint(address account, uint256 amount) internal {
         require(account != address(0), 'BEP20: mint to the zero address');
+        require(_totalSupply.add(amount) <= maxSupply,'Force: exceed max supply!');
 
         _totalSupply = _totalSupply.add(amount);
         _balances[account] = _balances[account].add(amount);

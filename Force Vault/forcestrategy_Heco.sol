@@ -1253,7 +1253,7 @@ contract ForceStrategyV1 is Ownable, Pausable {
     }
 
     /**
-     * @dev Takes out 3.5% as system fees from the rewards. 
+     * @dev Takes out 4% as system fees from the rewards. 
      * 0.5% -> call fee
      * 3.0%  -> Treasury fee
      */
