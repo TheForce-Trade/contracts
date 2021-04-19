@@ -1284,7 +1284,7 @@ contract StrategyCakeLPV1 is Ownable, Pausable {
      * 5. It deposits the new LP tokens.
      */
     function harvest() external whenNotPaused {
-        require(!Address.isContract(msg.sender), "Require non-contract call!");
+        //require(!Address.isContract(msg.sender), "Require non-contract call!");
         require(admins[msg.sender] == true,"Not called by admin!");
         IMasterChef(masterchef).deposit(poolId, 0);
         chargeFees();

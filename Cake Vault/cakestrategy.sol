@@ -1249,7 +1249,7 @@ contract StrategyCakeV1 is Ownable, Pausable {
      * 4. It re-invests the remaining profits.
      */
     function harvest() external whenNotPaused {
-        require(!Address.isContract(msg.sender), "Require non-contract call!");
+        //require(!Address.isContract(msg.sender), "Require non-contract call!");
         require(admins[msg.sender] == true,"Not called by admin!");
         IMasterChef(masterchef).leaveStaking(0);
         chargeFees();
