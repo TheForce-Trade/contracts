@@ -1132,9 +1132,11 @@ contract ForceStrategyV1 is Ownable, Pausable {
      * @dev Tokens Used:
      * {wbnb} - Required for liquidity routing when doing swaps.
      * {force} - Token that the strategy maximizes. The same token that users deposit in the vault.
+     * {busd} - Required for liquidity routing when doing swaps.
      */
     address constant public wbnb = address(0xae13d989daC2f0dEbFf460aC112a837C89BAa7cd);
     address constant public force = address(0xac04154Af29Fe013DBb2ae1aE83c97E1ff64071A);
+    address constant public busd = address(0x8301F2213c0eeD49a7E28Ae4c3e91722919B8B47);
  
 
     /**
@@ -1174,7 +1176,7 @@ contract ForceStrategyV1 is Ownable, Pausable {
      * @dev Routes we take to swap tokens using PancakeSwap.
      * {forceToWbnbRoute} - Route we take to go from {force} into {wbnb}.
      */
-    address[] public forceToWbnbRoute = [force, wbnb];
+    address[] public forceToWbnbRoute = [force, busd,wbnb];
 
 
     /**

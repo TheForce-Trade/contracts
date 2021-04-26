@@ -1133,12 +1133,14 @@ contract StrategyCakeLPV1 is Ownable, Pausable {
      * {wbnb} - Required for liquidity routing when doing swaps.
      * {cake} - Token that the strategy maximizes. The same token that users deposit in the vault.
      * {force} - BeefyFinance token, used to send funds to the treasury.
+     * {busd} - Required for liquidity routing when doing swaps.
      * {lpPair} - Token that the strategy maximizes. The same token that users deposit in the vault.
      * {lpToken0, lpToken1} - Tokens that the strategy maximizes. IPancakePair token
      */
-    address constant public wbnb = address(0xae13d989daC2f0dEbFf460aC112a837C89BAa7cd);
-    address constant public cake = address(0xc4Bea3B6ab8518F02527702294925228223475B7);
-    address constant public force = address(0xa6b65034A72F67490c809D0318cEde6b0D7b7888);
+    address constant public wbnb = address(0xbb4CdB9CBd36B01bD1cBaEBF2De08d9173bc095c);
+    address constant public cake = address(0x0E09FaBB73Bd3Ade0a17ECC321fD13a19e81cE82);
+    //address constant public force = address(0x89684B5199F969dBD0659595fCD3047af614795a);
+    //address constant public busd = address(0xe9e7CEA3DedcA5984780Bafc599bD69ADd087D56);
     address public lpPair;
     address public lpToken0;
     address public lpToken1;
@@ -1149,15 +1151,15 @@ contract StrategyCakeLPV1 is Ownable, Pausable {
      * {masterchef} - MasterChef contract. Stake Cake, get rewards.
      * {poolId} - MasterChef pool id
      */
-    address constant public unirouter  = address(0xD99D1c33F9fC3444f8101754aBC46c52416550D1);
-    address constant public masterchef = address(0xf088d241e9bFD6427C82D07985B3e3e244DDCD2A);
+    address constant public unirouter  = address(0x05fF2B0DB69458A0750badebc4f9e13aDd608C7F);
+    address constant public masterchef = address(0x73feaa1eE314F8c655E354234017bE2193C9E24E);
     uint8 public poolId;
     /**
      * @dev 
      * {treasury} - Address of the force community treasury
      * {vault} - Address of the vault, to be set in constructor.
      */
-    address constant public treasury = address(0x23D3C41ef4354D29dD74D40B86c15d6DB57381f8);
+    address constant public treasury = address(0x1C65eCAE1278263Ce5d50124B16a54A5Ee5E9989);
     address public vault;
 
     /**
@@ -1170,12 +1172,12 @@ contract StrategyCakeLPV1 is Ownable, Pausable {
      *
      * {WITHDRAWAL_FEE} - Fee taxed when a user withdraws funds. 5 === 0.5% fee.
      * 
-     */
+     
     uint constant public CALL_FEE     = 50;
     uint constant public TREASURY_FEE = 300;
     uint constant public MAX_FEE      = 10000;
     uint constant public WITHDRAWAL_FEE = 5;
-
+    */
 
     /**
      * @dev Routes we take to swap tokens using PancakeSwap.
@@ -1187,7 +1189,7 @@ contract StrategyCakeLPV1 is Ownable, Pausable {
     address[] public cakeToWbnbRoute = [cake, wbnb];
     address[] public cakeToLp0Route;
     address[] public cakeToLp1Route;
-    address[] public wbnbToForceRoute = [wbnb, force];
+    //address[] public wbnbToForceRoute = [wbnb,busd,force];
 
 
     /**
@@ -1216,7 +1218,7 @@ contract StrategyCakeLPV1 is Ownable, Pausable {
 
         IERC20(cake).safeApprove(unirouter, uint(-1));
         IERC20(wbnb).safeApprove(unirouter, uint(-1));
-        IERC20(force).safeApprove(unirouter, uint(-1));
+        //IERC20(force).safeApprove(unirouter, uint(-1));
 
         IERC20(lpToken0).safeApprove(unirouter, 0);
         IERC20(lpToken0).safeApprove(unirouter, uint(-1));
@@ -1267,12 +1269,15 @@ contract StrategyCakeLPV1 is Ownable, Pausable {
             pairBal = _amount;    
         }
         
+        IERC20(lpPair).safeTransfer(vault, pairBal); 
+        /*
         if (tx.origin == owner()) {
             IERC20(lpPair).safeTransfer(vault, pairBal); 
         } else {
             uint256 withdrawalFee = pairBal.mul(WITHDRAWAL_FEE).div(MAX_FEE);
             IERC20(lpPair).safeTransfer(vault, pairBal.sub(withdrawalFee));
         }
+        */
     }
 
     /**
@@ -1287,24 +1292,22 @@ contract StrategyCakeLPV1 is Ownable, Pausable {
         //require(!Address.isContract(msg.sender), "Require non-contract call!");
         require(admins[msg.sender] == true,"Not called by admin!");
         IMasterChef(masterchef).deposit(poolId, 0);
-        chargeFees();
+        //chargeFees();
         addLiquidity();
         deposit();
     }
     
-
     /**
      * @dev Takes out 3.5% as system fees from the rewards. 
      * 0.5% -> call fee
      * 3.0%  -> Treasury fee, out of which 70% is swapped to force, and 30% swapped to BNB
-     */
+     
     function chargeFees() internal {
         uint256 cakeBal = IERC20(cake).balanceOf(address(this));
         uint256 toWbnb = cakeBal.mul(350).div(MAX_FEE);
         
         IUniswapRouter(unirouter).swapExactTokensForTokens(toWbnb, 0, cakeToWbnbRoute, address(this), now.add(600));
         
-
         uint256 wbnbBal = IERC20(wbnb).balanceOf(address(this));
 
         uint256 callFee = wbnbBal.mul(CALL_FEE).div(350);
@@ -1317,7 +1320,7 @@ contract StrategyCakeLPV1 is Ownable, Pausable {
         IERC20(force).safeTransfer(treasury, IERC20(force).balanceOf(address(this))); 
         
     }
-
+    */
     /**
      * @dev Swaps {cake} for {lpToken0}, {lpToken1} & {wbnb} using PancakeSwap.
      */

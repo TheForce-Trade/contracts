@@ -868,6 +868,7 @@ contract Ownable is Context {
 pragma solidity ^0.6.0;
 
 interface IStrategy {
+    function vault() external view returns (address);
     function want() external view returns (address);
     function deposit() external;
     function withdraw(uint256) external;
@@ -976,7 +977,7 @@ contract CakeLPVaultV1 is ERC20, Ownable {
      * Returns an uint256 with 18 decimals of how much underlying asset one vault share represents.
      */
     function getPricePerFullShare() public view returns (uint256) {
-        return balance().mul(1e18).div(totalSupply());
+        return totalSupply() == 0 ? 1e18 : balance().mul(1e18).div(totalSupply());
     }
 
     /**
@@ -1052,6 +1053,7 @@ contract CakeLPVaultV1 is ERC20, Ownable {
      * @param _implementation The address of the candidate strategy.  
      */
     function proposeStrat(address _implementation) public onlyOwner {
+        require(address(this) == IStrategy(_implementation).vault(), "Proposal not valid for this Vault");
         stratCandidate = StratCandidate({ 
             implementation: _implementation,
             proposedTime: block.timestamp
@@ -1078,5 +1080,16 @@ contract CakeLPVaultV1 is ERC20, Ownable {
         stratCandidate.proposedTime = 1;
         
         earn();
+    }
+
+    /**
+     * @dev Rescues other tokens mistakenly sent to this vault
+     * @param _otherToken address of the token to rescue.
+     */
+    function inCaseTokensGetStuck(address _otherToken) external onlyOwner {
+        require(_otherToken != address(token), "!token");
+
+        uint256 amount = IERC20(_otherToken).balanceOf(address(this));
+        IERC20(_otherToken).safeTransfer(msg.sender, amount);
     }
 }

@@ -868,6 +868,7 @@ contract Ownable is Context {
 pragma solidity ^0.6.0;
 
 interface IStrategy {
+    function vault() external view returns (address);
     function want() external view returns (address);
     function deposit() external;
     function withdraw(uint256) external;
@@ -891,7 +892,7 @@ pragma solidity ^0.6.0;
  * This is the contract that receives funds and that users interface with.
  * The yield optimizing strategy itself is implemented in a separate 'Strategy.sol' contract.
  */
-contract CakeVaultV1 is ERC20, Ownable {
+contract CakeVaultV2 is ERC20, Ownable {
     using SafeERC20 for IERC20;
     using Address for address;
     using SafeMath for uint256;
@@ -976,7 +977,7 @@ contract CakeVaultV1 is ERC20, Ownable {
      * Returns an uint256 with 18 decimals of how much underlying asset one vault share represents.
      */
     function getPricePerFullShare() public view returns (uint256) {
-        return balance().mul(1e18).div(totalSupply());
+        return totalSupply() == 0 ? 1e18 : balance().mul(1e18).div(totalSupply());
     }
 
     /**
@@ -1003,7 +1004,7 @@ contract CakeVaultV1 is ERC20, Ownable {
             shares = (_amount.mul(totalSupply())).div(_pool);
         }
         _mint(msg.sender, shares);
-
+        
         earn();
     }
 
@@ -1052,6 +1053,7 @@ contract CakeVaultV1 is ERC20, Ownable {
      * @param _implementation The address of the candidate strategy.  
      */
     function proposeStrat(address _implementation) public onlyOwner {
+        require(address(this) == IStrategy(_implementation).vault(), "Proposal not valid for this Vault");
         stratCandidate = StratCandidate({ 
             implementation: _implementation,
             proposedTime: block.timestamp
@@ -1078,5 +1080,16 @@ contract CakeVaultV1 is ERC20, Ownable {
         stratCandidate.proposedTime = 1;
         
         earn();
+    }
+
+    /**
+     * @dev Rescues other tokens mistakenly sent to this vault
+     * @param _otherToken address of the token to rescue.
+     */
+    function inCaseTokensGetStuck(address _otherToken) external onlyOwner {
+        require(_otherToken != address(token), "!token");
+
+        uint256 amount = IERC20(_otherToken).balanceOf(address(this));
+        IERC20(_otherToken).safeTransfer(msg.sender, amount);
     }
 }

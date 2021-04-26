@@ -1102,16 +1102,7 @@ interface IMasterChef {
 }
 
 
-
-
 pragma solidity ^0.6.12;
-
-
-
-
-
-
-
 
 
 /**
@@ -1134,25 +1125,27 @@ contract StrategyCakeV1 is Ownable, Pausable {
      * {wbnb} - Required for liquidity routing when doing swaps.
      * {cake} - Token that the strategy maximizes. The same token that users deposit in the vault.
      * {force} - BeefyFinance token, used to send funds to the treasury.
+     * {busd} - Required for liquidity routing when doing swaps.
      */
-    address constant public wbnb = address(0xae13d989daC2f0dEbFf460aC112a837C89BAa7cd);
-    address constant public cake = address(0xc4Bea3B6ab8518F02527702294925228223475B7);
-    address constant public force = address(0xa6b65034A72F67490c809D0318cEde6b0D7b7888);
+    //address constant public wbnb = address(0xbb4CdB9CBd36B01bD1cBaEBF2De08d9173bc095c);
+    address constant public cake = address(0x0E09FaBB73Bd3Ade0a17ECC321fD13a19e81cE82);
+    //address constant public force = address(0x89684B5199F969dBD0659595fCD3047af614795a);
+    //address constant public busd = address(0xe9e7CEA3DedcA5984780Bafc599bD69ADd087D56);
 
     /**
      * @dev Third Party Contracts:
      * {unirouter} - PancakeSwap unirouter
      * {masterchef} - MasterChef contract. Stake Cake, get rewards.
      */
-    address constant public unirouter  = address(0xD99D1c33F9fC3444f8101754aBC46c52416550D1);
-    address constant public masterchef = address(0xf088d241e9bFD6427C82D07985B3e3e244DDCD2A);
+    //address constant public unirouter  = address(0xD99D1c33F9fC3444f8101754aBC46c52416550D1);
+    address constant public masterchef = address(0x73feaa1eE314F8c655E354234017bE2193C9E24E);
 
     /**
      * @dev 
      * {treasury} - Address of the force community treasury
      * {vault} - Address of the vault, to be set in constructor.
      */
-    address constant public treasury = address(0x23D3C41ef4354D29dD74D40B86c15d6DB57381f8);
+    //address constant public treasury = address(0x1C65eCAE1278263Ce5d50124B16a54A5Ee5E9989);
     address public vault;
 
     /**
@@ -1165,20 +1158,22 @@ contract StrategyCakeV1 is Ownable, Pausable {
      *
      * {WITHDRAWAL_FEE} - Fee taxed when a user withdraws funds. 5 === 0.05% fee.
      * 
-     */
+     
     uint constant public CALL_FEE     = 50;
     uint constant public TREASURY_FEE = 300;
     uint constant public MAX_FEE      = 10000;
     uint constant public WITHDRAWAL_FEE = 5;
-
+    */
 
     /**
      * @dev Routes we take to swap tokens using PancakeSwap.
      * {cakeToWbnbRoute} - Route we take to go from {cake} into {wbnb}.
      * {wbnbToForceRoute} - Route we take to go from {wbnb} into {force}.
-     */
+     
     address[] public cakeToWbnbRoute = [cake, wbnb];
-    address[] public wbnbToForceRoute = [wbnb, force];
+    address[] public wbnbToForceRoute = [wbnb, busd,force];
+
+    */
 
     /**
      * @dev Initializes the strategy with the token that it will look to maximize.
@@ -1187,10 +1182,7 @@ contract StrategyCakeV1 is Ownable, Pausable {
     constructor(address _vault) public {
         vault = _vault;
         admins[msg.sender] = true;
-        IERC20(cake).safeApprove(unirouter, uint(-1));
-        IERC20(wbnb).safeApprove(unirouter, uint(-1));
-        IERC20(force).safeApprove(unirouter, uint(-1));
-        IERC20(cake).safeApprove(masterchef, uint(-1));
+        _giveAllowances();
     }
 
     function addAdmin(address _admin) external onlyOwner {
@@ -1215,14 +1207,12 @@ contract StrategyCakeV1 is Ownable, Pausable {
     }
 
     /**
-     * @dev It withdraws {cake} from the MasterChef and sends it to the vault. The contract owner
-     * doesn't pay withdrawal fees. It makes it so that this strat can also be used as a worker 
-     * under a YieldBalancer.
+     * @dev It withdraws {cake} from the MasterChef and sends it to the vault. 
      * @param _amount How much {cake} to withdraw.
      */
     function withdraw(uint256 _amount) external {
         require(msg.sender == vault, "!vault");
-
+     
         uint256 cakeBal = IERC20(cake).balanceOf(address(this));
 
         if (cakeBal <= _amount) {
@@ -1233,35 +1223,37 @@ contract StrategyCakeV1 is Ownable, Pausable {
         if (cakeBal > _amount) {
             cakeBal = _amount;    
         }
-        
+
+        IERC20(cake).safeTransfer(vault, cakeBal); 
+        /*
         if (tx.origin == owner()) {
             IERC20(cake).safeTransfer(vault, cakeBal); 
         } else {
             uint256 withdrawalFee = cakeBal.mul(WITHDRAWAL_FEE).div(MAX_FEE);
             IERC20(cake).safeTransfer(vault, cakeBal.sub(withdrawalFee)); 
-        }
+        } 
+        */
     }
 
     /**
      * @dev Core function of the strat, in charge of collecting and re-investing rewards.
      * 1. It claims rewards from the MasterChef
-     * 3. It charges the system fee and sends it to force stakers.
-     * 4. It re-invests the remaining profits.
+     * 2. It re-invests the remaining profits.
      */
     function harvest() external whenNotPaused {
         //require(!Address.isContract(msg.sender), "Require non-contract call!");
         require(admins[msg.sender] == true,"Not called by admin!");
         IMasterChef(masterchef).leaveStaking(0);
-        chargeFees();
+        //remove fees for now;
+        //chargeFees();
         deposit();
     }
-    
 
     /**
      * @dev Takes out 3.5% as system fees from the rewards. 
      * 0.5% -> call fee
      * 3.0%  -> Treasury fee, out of which 70% is swapped to force, and 30% swapped to BNB
-     */
+     
     function chargeFees() internal {
         uint256 cakeBal = IERC20(cake).balanceOf(address(this));
         uint256 toWbnb = cakeBal.mul(350).div(MAX_FEE);
@@ -1281,6 +1273,7 @@ contract StrategyCakeV1 is Ownable, Pausable {
         IERC20(force).safeTransfer(treasury, IERC20(force).balanceOf(address(this))); 
         
     }
+    */
 
     /**
      * @dev Function to calculate the total underlaying {cake} held by the strat.
@@ -1329,10 +1322,7 @@ contract StrategyCakeV1 is Ownable, Pausable {
      */
     function pause() public onlyOwner {
         _pause();
-
-        IERC20(cake).safeApprove(unirouter, 0);
-        IERC20(wbnb).safeApprove(unirouter, 0);
-        IERC20(cake).safeApprove(masterchef, 0);
+        _removeAllowances();
     }
 
     /**
@@ -1340,9 +1330,19 @@ contract StrategyCakeV1 is Ownable, Pausable {
      */
     function unpause() external onlyOwner {
         _unpause();
+        _giveAllowances();
+        deposit();
+    }
 
-        IERC20(cake).safeApprove(unirouter, uint(-1));
-        IERC20(wbnb).safeApprove(unirouter, uint(-1));
+    function _giveAllowances() internal {
+        //IERC20(cake).safeApprove(unirouter, uint(-1));
+        //IERC20(wbnb).safeApprove(unirouter, uint(-1));
         IERC20(cake).safeApprove(masterchef, uint(-1));
+    }
+
+    function _removeAllowances() internal {
+        //IERC20(cake).safeApprove(unirouter, 0);
+        //IERC20(wbnb).safeApprove(unirouter, 0);
+        IERC20(cake).safeApprove(masterchef, 0);
     }
 }

@@ -1133,8 +1133,8 @@ contract ForceStrategyV1 is Ownable, Pausable {
      * {wbnb} - Required for liquidity routing when doing swaps.
      * {force} - Token that the strategy maximizes. The same token that users deposit in the vault.
      */
-    address constant public wbnb = address(0xae13d989daC2f0dEbFf460aC112a837C89BAa7cd);
-    address constant public force = address(0xac04154Af29Fe013DBb2ae1aE83c97E1ff64071A);
+    address constant public wbnb = address(0xA3402dc2616D57F2cbCE2F6e0Aeb7e3F0953d8dd);
+    address constant public force = address(0x803660BC2493B2b1f0bEb56d4b6840A5701ae427);
  
 
     /**
@@ -1142,15 +1142,15 @@ contract ForceStrategyV1 is Ownable, Pausable {
      * {unirouter} - PancakeSwap unirouter
      * {jedimaster} - Master staking contract. Stake force, get rewards.
      */
-    address constant public unirouter  = address(0xD99D1c33F9fC3444f8101754aBC46c52416550D1);
-    address constant public jedimaster = address(0x64494e492C93Fced7A8993dbFbC35A1c7543C9f6);
+    address constant public unirouter  = address(0x930D6909112BdAC4662433FEb9FEF26265F34b8a);
+    address constant public jedimaster = address(0x23e54E7AbaA50B80113DB59571e226456A2D93c4);
 
     /**
      * @dev 
      * {treasury} - Address of the force community treasury
      * {vault} - Address of the vault, to be set in constructor.
      */
-    address constant public treasury = address(0xB3A7Ab9D9FFD1Eb288Bc46efd448A633C95Ca550);
+    address constant public treasury = address(0xD9f48A661412410143dfbc8dd526141658241A47);
     address public vault;
 
     /**
@@ -1220,7 +1220,7 @@ contract ForceStrategyV1 is Ownable, Pausable {
         require(msg.sender == vault, "!vault");
 
         uint256 forceBal = IERC20(force).balanceOf(address(this));
-
+        
         if (forceBal <= _amount) {
             IJediMaster(jedimaster).leaveStaking(_amount.sub(forceBal));
             forceBal = IERC20(force).balanceOf(address(this));
@@ -1251,9 +1251,9 @@ contract ForceStrategyV1 is Ownable, Pausable {
         chargeFees();
         deposit();
     }
-
+    
     /**
-     * @dev Takes out 4% as system fees from the rewards. 
+     * @dev Takes out 3.5% as system fees from the rewards. 
      * 0.5% -> call fee
      * 3.0%  -> Treasury fee
      */
@@ -1270,7 +1270,7 @@ contract ForceStrategyV1 is Ownable, Pausable {
         IERC20(force).safeTransfer(treasury, toForce);
     
     }
-
+    
     /**
      * @dev Function to calculate the total underlaying {force} held by the strat.
      * It takes into account both funds at hand, and the funds allocated in the jedimaster.
