@@ -1151,7 +1151,7 @@ contract StrategyCakeLPV1 is Ownable, Pausable {
      * {masterchef} - MasterChef contract. Stake Cake, get rewards.
      * {poolId} - MasterChef pool id
      */
-    address constant public unirouter  = address(0x05fF2B0DB69458A0750badebc4f9e13aDd608C7F);
+    address constant public unirouter  = address(0x10ED43C718714eb63d5aA57B78B54704E256024E);
     address constant public masterchef = address(0x73feaa1eE314F8c655E354234017bE2193C9E24E);
     uint8 public poolId;
     /**
