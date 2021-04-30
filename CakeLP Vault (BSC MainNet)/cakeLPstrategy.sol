@@ -1215,16 +1215,8 @@ contract StrategyCakeLPV1 is Ownable, Pausable {
         } else {
             cakeToLp1Route = [cake, wbnb, lpToken1];
         }
-
-        IERC20(cake).safeApprove(unirouter, uint(-1));
-        IERC20(wbnb).safeApprove(unirouter, uint(-1));
-        //IERC20(force).safeApprove(unirouter, uint(-1));
-
-        IERC20(lpToken0).safeApprove(unirouter, 0);
-        IERC20(lpToken0).safeApprove(unirouter, uint(-1));
-
-        IERC20(lpToken1).safeApprove(unirouter, 0);
-        IERC20(lpToken1).safeApprove(unirouter, uint(-1));
+        
+        _giveAllowances();
     }
 
     function addAdmin(address _admin) external onlyOwner {
@@ -1244,8 +1236,6 @@ contract StrategyCakeLPV1 is Ownable, Pausable {
         uint256 pairBal = IERC20(lpPair).balanceOf(address(this));
 
         if (pairBal > 0) {
-            IERC20(lpPair).safeApprove(masterchef, 0);
-            IERC20(lpPair).safeApprove(masterchef, pairBal);
             IMasterChef(masterchef).deposit(poolId, pairBal);
         }
     }
@@ -1253,14 +1243,13 @@ contract StrategyCakeLPV1 is Ownable, Pausable {
     /**
      * @dev Withdraws funds and sents them back to the vault.
      * It withdraws {lpPair} from the MasterChef.
-     * The available {lpPair} minus fees is returned to the vault.
      */
     function withdraw(uint256 _amount) external {
         require(msg.sender == vault, "!vault");
 
         uint256 pairBal = IERC20(lpPair).balanceOf(address(this));
 
-        if (pairBal < _amount) {   
+        if (pairBal <= _amount) {   
             IMasterChef(masterchef).withdraw(poolId, _amount.sub(pairBal));
             pairBal = IERC20(lpPair).balanceOf(address(this));
         }
@@ -1296,6 +1285,7 @@ contract StrategyCakeLPV1 is Ownable, Pausable {
         addLiquidity();
         deposit();
     }
+
     
     /**
      * @dev Takes out 3.5% as system fees from the rewards. 
@@ -1325,12 +1315,14 @@ contract StrategyCakeLPV1 is Ownable, Pausable {
      * @dev Swaps {cake} for {lpToken0}, {lpToken1} & {wbnb} using PancakeSwap.
      */
     function addLiquidity() internal {   
-        uint256 toLpToken1 = IERC20(cake).balanceOf(address(this)).div(2);
-        IUniswapRouter(unirouter).swapExactTokensForTokens(toLpToken1, 0, cakeToLp1Route, address(this), now.add(600));
-
+        uint256 cakeHalf = IERC20(cake).balanceOf(address(this)).div(2);
+        
         if (lpToken0 != cake) {
-            uint256 toLpToken0 = IERC20(cake).balanceOf(address(this));
-            IUniswapRouter(unirouter).swapExactTokensForTokens(toLpToken0, 0, cakeToLp0Route, address(this), now.add(600));
+            IUniswapRouter(unirouter).swapExactTokensForTokens(cakeHalf, 0, cakeToLp0Route, address(this), now.add(600));
+        }
+
+        if (lpToken1 != cake) {
+            IUniswapRouter(unirouter).swapExactTokensForTokens(cakeHalf, 0, cakeToLp1Route, address(this), now.add(600));
         }
 
         uint256 lp0Bal = IERC20(lpToken0).balanceOf(address(this));
@@ -1387,6 +1379,7 @@ contract StrategyCakeLPV1 is Ownable, Pausable {
      */
     function pause() external onlyOwner {
         _pause();
+        _removeAllowances();
     }
 
     /**
@@ -1394,5 +1387,26 @@ contract StrategyCakeLPV1 is Ownable, Pausable {
      */
     function unpause() external onlyOwner {
         _unpause();
+        _giveAllowances();
+        deposit();
+    }
+    
+    function _giveAllowances() internal {
+        IERC20(lpPair).safeApprove(masterchef, uint256(-1));
+        IERC20(cake).safeApprove(unirouter, uint256(-1));
+
+        IERC20(lpToken0).safeApprove(unirouter, 0);
+        IERC20(lpToken0).safeApprove(unirouter, uint256(-1));
+
+        IERC20(lpToken1).safeApprove(unirouter, 0);
+        IERC20(lpToken1).safeApprove(unirouter, uint256(-1));
+        
+    }
+
+    function _removeAllowances() internal {
+        IERC20(lpPair).safeApprove(masterchef, 0);
+        IERC20(cake).safeApprove(unirouter, 0);
+        IERC20(lpToken0).safeApprove(unirouter, 0);
+        IERC20(lpToken1).safeApprove(unirouter, 0);
     }
 }
